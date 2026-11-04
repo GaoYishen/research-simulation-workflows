@@ -1,0 +1,2 @@
+# Synthetic evidence is byte-hashed. Preserve exact bytes on every platform.
+examples/**/*.txt -text

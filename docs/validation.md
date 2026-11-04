@@ -2,6 +2,8 @@
 
 2026-11-04 pre-publication refresh: all 12 Python unittest tests and the three Skill format checks passed again on Windows/Python 3.13. GitHub owner selected: GaoYishen. See the repository Actions tab for remote CI results; the original candidate record below is historical.
 
+First remote CI exposed Git autocrlf normalization of the synthetic evidence on Linux: the working-tree bytes matched the manifests but the initial Git blobs did not. Added .gitattributes to preserve the exact bytes of examples/**/*.txt and re-staged those synthetic fixtures. Hash verification remains byte-exact; no normalization or relaxed comparison was added to the audit tool.
+
 Date: 2026-11-01 (Asia/Shanghai)
 
 - 12 Python unittest tests passed locally on Windows.
