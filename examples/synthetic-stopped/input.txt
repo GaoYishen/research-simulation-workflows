@@ -1,0 +1,2 @@
+SYNTHETIC EXAMPLE ONLY
+reference_value=1

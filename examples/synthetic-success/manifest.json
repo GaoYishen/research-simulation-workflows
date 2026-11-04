@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "case_id": "synthetic-success",
+  "objective": "Demonstrate record handling with synthetic evidence",
+  "parameters": [
+    {
+      "name": "reference_value",
+      "value": 1,
+      "unit": "1"
+    }
+  ],
+  "files": [
+    {
+      "path": "input.txt",
+      "sha256": "9f24951eb1f1acb5ba7e0b84f391aff4e07a11e980dd0c700f39e41bd9616ea5"
+    },
+    {
+      "path": "result.txt",
+      "sha256": "6a5f2918f7649308bbb0b7e32f7623174d725b72973c67e9d7f8f9fb3eaad630"
+    }
+  ],
+  "run_status": "completed",
+  "checks": [
+    {
+      "name": "illustrative-check",
+      "criterion": "Synthetic marker must be pass; not a physical criterion",
+      "status": "pass",
+      "evidence": "result.txt"
+    }
+  ],
+  "limitations": [
+    "Synthetic evidence only; no solver was run"
+  ],
+  "next_action": "Replace this example with a scoped case and justified acceptance criteria"
+}

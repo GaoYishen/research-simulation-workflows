@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "case_id": "replace-with-case-id",
+  "objective": "Describe purpose",
+  "parameters": [],
+  "files": [],
+  "run_status": "not_started",
+  "checks": [],
+  "limitations": [
+    "Not yet reviewed"
+  ],
+  "next_action": "Index explicit files using init"
+}
