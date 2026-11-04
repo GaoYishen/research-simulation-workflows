@@ -1,27 +1,68 @@
-# Research Simulation Workflows
+# 科研仿真记录与交接 · Research Simulation Workflows
 
-给科研计算建立可追溯的算例清单、检查文件完整性，并生成可继续工作的交接报告。
-Portable case manifests, integrity checks, and research handoffs.
+**仿真跑了很多版本，仍能找到：用了哪些参数、结果对应哪些文件、下一步该做什么。**
 
-这是独立的科研工作流工具，不包含 PRIME 求解器、计算方法源码、真实项目数据或软件许可证。
-只需 Python 3.10+，无第三方 Python 依赖，也不要求安装 Abaqus。
+Research simulation tracking, SHA-256 file integrity checks, and reproducible handoff reports for scientific computing.
 
-## 立即试用
+[![Tests](https://github.com/GaoYishen/research-simulation-workflows/actions/workflows/tests.yml/badge.svg)](https://github.com/GaoYishen/research-simulation-workflows/actions/workflows/tests.yml) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-想先看效果，可打开 `demo/index.html` 查看合成算例交互演示。若浏览器不允许本地文件使用 SHA-256，在仓库目录运行 `python -m http.server 18766 --bind 127.0.0.1`，然后打开 `http://127.0.0.1:18766/demo/`。演示不读取真实文件；网页中的运行状态为预设情景，文件指纹在浏览器本地计算。此演示独立于下方 Python 工具。
+用一份算例清单（manifest）连接参数、输入文件、运行状态与检查证据，再生成 Markdown 交接报告。Python 3.10+ 标准库，包含三个可复用的 Agent Skills。
 
-下载仓库 ZIP 并解压，在仓库目录打开终端：
+## 解决科研计算中的三个常见问题
 
-```sh
-python workflow.py check examples/synthetic-success/manifest.json
-python workflow.py handoff examples/synthetic-success/manifest.json --output handoff.md
-python -m unittest discover -s tests -v
+| 你遇到的情况 | 这个工具怎么帮忙 |
+|---|---|
+| “这个结果到底是哪份输入跑出来的？” | 显式记录文件路径和 SHA-256 指纹，核对文件是否变化 |
+| “任务停止了，还是已经验证通过了？” | 分别记录运行状态与声明检查结果 |
+| “换个会话或换个人，还能接着做吗？” | 生成包含目标、参数、证据、限制和下一步的交接报告 |
+
+```mermaid
+flowchart LR
+    A[参数与文件] --> B[算例清单 manifest]
+    B --> C[文件完整性检查]
+    C --> D[Markdown 交接报告]
+    D --> E[继续研究或交接协作]
 ```
 
-Windows 也可用 `py` 代替 `python`。脚本拒绝覆盖已有输出文件。
-三个示例分别展示：已完成且声明检查通过、已完成但检查失败、手动停止且尚未验证。
-失败示例的记录本身可以完整有效；`check` 返回 0 只表示记录有效，不表示计算成功。
-示例证据文件按原始字节计算哈希；`.gitattributes` 禁止 Git 自动转换这些 `.txt` 文件的换行符，以保持 Windows/Linux 检查一致。编辑器若改变文件换行，也会被视为文件变化。
+## 先看效果
+
+仓库提供三个可复现的合成情景：
+
+| 示例 | 运行状态 | 声明检查 |
+|---|---|---|
+| [synthetic-success](examples/synthetic-success) | 已完成 | 通过 |
+| [synthetic-failure](examples/synthetic-failure) | 已完成 | 失败 |
+| [synthetic-stopped](examples/synthetic-stopped) | 手动停止 | 尚未验证 |
+
+还可以打开 [交互演示](demo/index.html)，查看算例记录与文件指纹的工作方式。
+
+## 一分钟上手
+
+```sh
+git clone https://github.com/GaoYishen/research-simulation-workflows.git
+cd research-simulation-workflows
+python workflow.py check examples/synthetic-success/manifest.json
+python workflow.py handoff examples/synthetic-success/manifest.json --output handoff.md
+```
+
+打开生成的 `handoff.md`，即可查看目标、参数、文件校验、检查结论与下一步。
+
+Windows 可用 `py -3` 代替 `python`。输出文件采用新建方式保存。
+
+`check` 的退出码 0 表示算例记录有效；计算结论请查看运行状态和声明检查项。
+
+<details>
+<summary>本地运行交互演示</summary>
+
+在仓库目录运行：
+
+```sh
+python -m http.server 18766 --bind 127.0.0.1
+```
+
+打开 <http://127.0.0.1:18766/demo/>。演示使用预设情景，在浏览器本地计算合成内容的文件指纹；Python 工具则检查 manifest 中列出的实际文件。
+
+</details>
 
 ## 用于自己的算例
 
@@ -46,20 +87,29 @@ python workflow.py handoff /path/to/case/manifest.json --output my-handoff.md
 这三个 Skill 共用仓库根部脚本，不能只复制一个 SKILL.md 后删除其余仓库文件。
 示例请求：“请按 simulation-run-review 检查 examples/synthetic-stopped/manifest.json，并说明还能得出哪些结论。”
 
-## 能力边界
+## 如何理解检查结果
 
-SHA-256 检查只能发现相对已记录哈希的文件变化；不能证明文件来源真实。
-验证状态基于使用者声明的检查项，工具不会重新计算物理指标，也不会解析任意求解器日志。
-`reported_checks_passed` 仅表示已完成运行的声明检查均通过且记录有效，不是完整模型验证认证。
-当前不执行求解器、不上传数据、不调用大模型服务。
+SHA-256 用于核对文件与已记录指纹是否一致。验证状态来自清单中声明的检查项；`reported_checks_passed` 表示已完成运行的声明检查通过且记录有效。物理模型验证需要相应计算或实验依据。
 
-## 来源与发布
+示例证据文件按原始字节计算哈希；仓库保留其原始换行符，确保 Windows/Linux 检查一致。
 
-本仓库根据科研计算记录的通用需求新写。未复制第三方插件或已有 Skill 正文。
-所有示例均为合成记录，无专有求解器接口。见 [PROVENANCE.md](PROVENANCE.md)。
-贡献要求见 [CONTRIBUTING.md](CONTRIBUTING.md)。发布步骤见 [docs/release.md](docs/release.md)。
+## 测试与贡献
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+欢迎通过 Issue 提供可复现的问题或工作流需求。贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)，字段说明见 [docs/manifest.md](docs/manifest.md)，来源说明见 [PROVENANCE.md](PROVENANCE.md)。
+
+## English overview
+
+Portable research simulation tracking for scientific computing: create explicit case manifests, verify file integrity with SHA-256, separate run status from declared validation checks, and generate Markdown research handoff reports. Includes three Agent Skills for simulation case management, run review, and session handoff, plus synthetic examples and an interactive demo.
+
+## 相关工具
+
+- [有限元网格检查](https://github.com/GaoYishen/abaqus-mesh-audit)：二维网格质量与连接关系筛查。
+- [电池容量与倍率核算](https://github.com/GaoYishen/battery-capacity-audit)：容量、N/P、倍率电流与厚度计算。
 
 ## License
 
-本仓库采用 [MIT License](LICENSE)，允许使用、修改与再分发，并要求保留版权及许可声明。
-授权仅适用于本仓库包含的内容；不包含 PRIME 私有求解器、未公开研究资料或商业求解软件的使用权。
+[MIT License](LICENSE)。
